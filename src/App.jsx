@@ -1,35 +1,95 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useState } from 'react'
 import './App.css'
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: 'http://localhost:8000/api',
+});
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [todos, setTodos] = useState([]);
+
+  useEffect(() => {
+    fetchTodos();
+  }, []);
+
+  const fetchTodos = async () => {
+    const response = await api.get(`/todos`);
+    console.log(response);
+    setTodos(response.data);
+  };
+
+  const addTodo = async () => {
+    if (title.trim() === '') return;
+    await api.post(`/todos`, { title, description });
+    setTitle('');
+    setDescription('');
+    fetchTodos();
+  };
+
+  const toggleComplete = async (id, current) => {
+    await api.put(`/todos/${id}`, { is_completed: !current });
+    fetchTodos();
+  };
+
+  const deleteTodo = async (id) => {
+    await api.delete(`/todos/${id}`);
+    fetchTodos();
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div style={{ padding: '20px', maxWidth: '600px', margin: 'auto' }}>
+      <h1>ToDo List</h1>
+
+      <input
+        type="text"
+        placeholder="Add a new task"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        style={{ width: '70%', padding: '10px', marginRight: '10px' }}
+      />
+      <br/>
+      <br/>
+      <input
+        type="text"
+        placeholder="Add a new description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        style={{ width: '70%', padding: '10px', marginRight: '10px' }}
+      />
+      <br/>
+      <br/>
+      <button onClick={addTodo}>Add</button>
+
+      <ul style={{ marginTop: '20px' }}>
+        {todos.map((todo) => (
+          <li key={todo.id} style={{ marginBottom: '10px' }}>
+            <input
+              type="checkbox"
+              checked={todo.is_completed}
+              onChange={() => toggleComplete(todo.id, todo.is_completed)}
+            />
+            <span
+              style={{
+                marginLeft: '10px',
+                textDecoration: todo.completed ? 'line-through' : 'none',
+              }}
+            >
+              {todo.title}
+            </span>
+            <button
+              onClick={() => deleteTodo(todo.id)}
+              style={{ marginLeft: '10px', color: 'red' }}
+            >
+              Delete
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 export default App
