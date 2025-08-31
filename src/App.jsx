@@ -18,7 +18,7 @@ function App() {
   const fetchTodos = async () => {
     const response = await api.get(`/todos`);
     console.log(response);
-    setTodos(response.data);
+    setTodos(response.data.data);
   };
 
   const addTodo = async () => {
@@ -30,7 +30,7 @@ function App() {
   };
 
   const toggleComplete = async (id, current) => {
-    await api.put(`/todos/${id}`, { is_completed: !current });
+    await api.post(`/todos/${id}`, { isCompleted: !current });
     fetchTodos();
   };
 
